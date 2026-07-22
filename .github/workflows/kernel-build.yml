@@ -1,0 +1,47 @@
+name: kernel-build
+on:
+  push:
+    branches: [main]
+    paths: [build-config.env]
+  workflow_dispatch: {}
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Load build config
+        run: grep -E '^[A-Z_]+=' build-config.env >> "$GITHUB_ENV"
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang lld llvm make flex bison bc libssl-dev libelf-dev cpio xz-utils wget
+      - name: Fetch kernel source
+        run: |
+          wget -q "$KERNEL_SRC_URL" -O kernel.tar.xz
+          mkdir -p src
+          tar -xf kernel.tar.xz -C src --strip-components=1
+      - name: Configure
+        working-directory: src
+        run: |
+          make ARCH=$ARCH LLVM=1 $BASE_CONFIG
+          for c in $(echo "$EXTRA_ENABLE" | tr ',' ' '); do [ -n "$c" ] && ./scripts/config -e "$c" || true; done
+          for c in $(echo "$EXTRA_DISABLE" | tr ',' ' '); do [ -n "$c" ] && ./scripts/config -d "$c" || true; done
+          make ARCH=$ARCH LLVM=1 olddefconfig
+      - name: Build
+        working-directory: src
+        run: make -j"$(nproc)" ARCH=$ARCH LLVM=1
+      - name: Collect artifacts
+        run: |
+          mkdir -p out
+          find src/arch/$ARCH/boot -maxdepth 1 -type f \( -name Image -o -name "Image.*" -o -name bzImage \) -exec cp {} out/ \;
+          ls -la out
+          cd out && sha256sum * > SHA256SUMS
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: gh-build-${{ github.run_number }}
+          name: GH Actions build ${{ github.run_number }}
+          files: out/*
