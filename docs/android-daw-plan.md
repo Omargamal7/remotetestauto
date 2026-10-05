@@ -251,8 +251,13 @@ Highest total wins. Ties go to the cheaper app.
 - FL Studio Mobile → FL Studio desktop via .flp [S1].
 - n-Track Android → n-Track Windows/Mac via .sng [S9].
 - Cubasis → Cubase via the export listed on Google Play [S5].
-- Everything else → stems as WAV. Android has no plugin standard, so stems are
-  the only portable asset [S6].
+- Zenbeats → Zenbeats desktop. Roland's page describes "transfers between
+  phone, tablet, and desktop" using Google Drive or OneDrive to share Zenbeats
+  projects, with stem and loop export for other DAWs [S19].
+- Everything else (BandLab, Audio Evolution, Caustic) → stems as WAV. Android
+  has no plugin standard, so stems are the only portable asset [S6]. Audio
+  Evolution projects also sync between its Android and iOS versions via Google
+  Drive, but no desktop version is listed [S7].
 
 ## 5. Reusable prompt
 
